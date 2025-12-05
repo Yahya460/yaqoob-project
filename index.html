@@ -11,6 +11,8 @@
       --accent: #38bdf8;
       --btn: #2563eb;
       --btn-dark: #1d4ed8;
+      --btn-light: #e5e7eb;
+      --danger: #ef4444;
     }
     * { box-sizing: border-box; }
     body {
@@ -55,7 +57,6 @@
       color: #9ca3af;
     }
 
-    /* شاشة العرض */
     .display-title {
       margin: 8px 0 14px;
       font-size: 24px;
@@ -65,7 +66,7 @@
       border-radius: 28px;
       padding: 18px 14px;
       border: 2px solid rgba(148,163,184,0.4);
-      max-width: 420px;
+      max-width: 460px;
       margin: 0 auto 6px;
     }
     .ticket-label {
@@ -74,37 +75,57 @@
       margin-bottom: 6px;
     }
     .ticket-number {
-      font-size: 80px;
+      font-size: 96px;
       font-weight: 800;
       color: var(--accent);
+      line-height: 1.1;
     }
+    /* حركة عند تغيير الرقم */
+    .ticket-number.pulse {
+      animation: pulse 0.45s ease-out;
+    }
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
     .note {
       margin-top: 6px;
       font-size: 13px;
       color: #9ca3af;
+      text-align: center;
     }
 
-    /* لوحة الموظف */
     .panel-title {
       margin: 0 0 10px;
       font-size: 18px;
     }
+
     .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      align-items: center;
     }
+    .controls-extra {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
     button {
-      flex: 1 1 160px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 16px;
       border: none;
       cursor: pointer;
       font-weight: 600;
+      border-radius: 16px;
     }
     #nextBtn {
+      flex: 1 1 210px;
+      padding: 12px;
+      font-size: 16px;
       background: var(--btn);
       color: #fff;
     }
@@ -112,14 +133,46 @@
       background: var(--btn-dark);
       transform: scale(0.98);
     }
+
+    /* زر العميل السابق أصغر */
     #backBtn {
-      background: #e5e7eb;
+      flex: 0 0 150px;
+      padding: 9px;
+      font-size: 13px;
+      background: var(--btn-light);
       color: #020617;
     }
     #backBtn:active {
       background: #d1d5db;
       transform: scale(0.98);
     }
+
+    #repeatBtn {
+      flex: 1 1 170px;
+      padding: 8px;
+      font-size: 13px;
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+    #repeatBtn:active {
+      background: rgba(148,163,184,0.15);
+      transform: scale(0.98);
+    }
+
+    #resetBtn {
+      flex: 0 0 150px;
+      padding: 8px;
+      font-size: 13px;
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(248,113,113,0.7);
+    }
+    #resetBtn:active {
+      background: rgba(248,113,113,0.12);
+      transform: scale(0.98);
+    }
+
     .info-line {
       font-size: 13px;
       color: #9ca3af;
@@ -136,15 +189,20 @@
       .card { padding: 16px 14px 12px; }
       .title { font-size: 19px; }
       .display-title { font-size: 20px; }
-      .ticket-number { font-size: 56px; }
-      .controls { flex-direction: column; }
+      .ticket-number { font-size: 64px; }
+      .controls,
+      .controls-extra { flex-direction: column; }
+      #backBtn, #repeatBtn, #resetBtn, #nextBtn {
+        flex: 1 1 auto;
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page">
 
-    <!-- الكرت الأول: شاشة العرض -->
+    <!-- شاشة العرض -->
     <section class="card">
       <div class="header">
         <img src="logo.png" alt="الشعار" class="logo" />
@@ -166,65 +224,10 @@
       <audio id="callSound" src="yaqoob.mp3" preload="auto"></audio>
     </section>
 
-    <!-- الكرت الثاني: لوحة الموظف -->
+    <!-- لوحة الموظف -->
     <section class="card">
       <h3 class="panel-title">لوحة الموظف</h3>
+
       <div class="controls">
         <button id="nextBtn">نداء العميل التالي</button>
-        <button id="backBtn">رجوع للعميل السابق</button>
-      </div>
-      <p class="info-line">
-        ملاحظة: هذه الصفحة تجمع بين شاشة العرض ولوحة الموظف معًا. تأكد من إبقائها مفتوحة أثناء العمل.
-      </p>
-    </section>
-
-    <footer>
-      جميع الحقوق محفوظة لـ يحيى آل عبدالسلام – 95359513
-    </footer>
-  </div>
-
-  <script>
-    const CURRENT_KEY = "yaq_cur";
-    const PREV_KEY = "yaq_prev";
-
-    const currentEl = document.getElementById("currentNumber");
-    const nextBtn = document.getElementById("nextBtn");
-    const backBtn = document.getElementById("backBtn");
-    const callSound = document.getElementById("callSound");
-
-    function loadNumbers() {
-      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
-      currentEl.textContent = current;
-    }
-
-    function playSound() {
-      if (!callSound) return;
-      callSound.currentTime = 0;
-      callSound.play().catch(() => {});
-    }
-
-    nextBtn.addEventListener("click", () => {
-      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
-      const next = current + 1;
-      localStorage.setItem(PREV_KEY, current);     // حفظ العميل السابق
-      localStorage.setItem(CURRENT_KEY, next);     // تعيين العميل الجديد
-      loadNumbers();
-      if (next > 0) playSound();
-    });
-
-    backBtn.addEventListener("click", () => {
-      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
-      const prev = Number(localStorage.getItem(PREV_KEY)) || 0;
-      if (prev === current) return;
-      // التبديل بين العميل الحالي والسابق
-      localStorage.setItem(CURRENT_KEY, prev);
-      localStorage.setItem(PREV_KEY, current);
-      loadNumbers();
-      if (prev > 0) playSound();
-    });
-
-    loadNumbers();
-  </script>
-</body>
-</html>
-
+        <button id="ba
