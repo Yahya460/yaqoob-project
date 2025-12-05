@@ -57,10 +57,6 @@
       color: #9ca3af;
     }
 
-    .display-title {
-      margin: 8px 0 14px;
-      font-size: 24px;
-    }
     .ticket-box {
       background: #020617;
       border-radius: 28px;
@@ -80,16 +76,14 @@
       color: var(--accent);
       line-height: 1.1;
     }
-    /* حركة عند تغيير الرقم */
     .ticket-number.pulse {
       animation: pulse 0.45s ease-out;
     }
     @keyframes pulse {
-      0%   { transform: scale(1); }
-      45%  { transform: scale(1.12); }
+      0% { transform: scale(1); }
+      45% { transform: scale(1.12); }
       100% { transform: scale(1); }
     }
-
     .note {
       margin-top: 6px;
       font-size: 13px;
@@ -133,8 +127,6 @@
       background: var(--btn-dark);
       transform: scale(0.98);
     }
-
-    /* زر العميل السابق أصغر */
     #backBtn {
       flex: 0 0 150px;
       padding: 9px;
@@ -146,7 +138,6 @@
       background: #d1d5db;
       transform: scale(0.98);
     }
-
     #repeatBtn {
       flex: 1 1 170px;
       padding: 8px;
@@ -159,7 +150,6 @@
       background: rgba(148,163,184,0.15);
       transform: scale(0.98);
     }
-
     #resetBtn {
       flex: 0 0 150px;
       padding: 8px;
@@ -188,7 +178,6 @@
     @media (max-width: 640px) {
       .card { padding: 16px 14px 12px; }
       .title { font-size: 19px; }
-      .display-title { font-size: 20px; }
       .ticket-number { font-size: 64px; }
       .controls,
       .controls-extra { flex-direction: column; }
@@ -230,4 +219,116 @@
 
       <div class="controls">
         <button id="nextBtn">نداء العميل التالي</button>
-        <button id="ba
+        <button id="backBtn">رجوع للعميل السابق</button>
+      </div>
+
+      <div class="controls-extra">
+        <button id="repeatBtn">إعادة نداء نفس العميل</button>
+        <button id="resetBtn">إعادة تعيين الأرقام</button>
+      </div>
+
+      <p class="info-line">
+        ملاحظة: هذه الصفحة تجمع بين شاشة العرض ولوحة الموظف معًا. تأكد من إبقائها مفتوحة أثناء العمل.
+      </p>
+    </section>
+
+    <footer>
+      جميع الحقوق محفوظة لـ يحيى آل عبدالسلام – 95359513
+    </footer>
+  </div>
+
+  <script>
+    const CURRENT_KEY = "yaq_cur";
+    const HISTORY_KEY = "yaq_hist";
+
+    const currentEl = document.getElementById("currentNumber");
+    const nextBtn = document.getElementById("nextBtn");
+    const backBtn = document.getElementById("backBtn");
+    const repeatBtn = document.getElementById("repeatBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const callSound = document.getElementById("callSound");
+
+    function getCurrent() {
+      const value = localStorage.getItem(CURRENT_KEY);
+      return value ? Number(value) : 0;
+    }
+
+    function setCurrent(value) {
+      localStorage.setItem(CURRENT_KEY, String(value));
+      updateDisplay();
+    }
+
+    function getHistory() {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setHistory(arr) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    }
+
+    function updateDisplay() {
+      const current = getCurrent();
+      currentEl.textContent = current;
+
+      currentEl.classList.remove("pulse");
+      void currentEl.offsetWidth;
+      if (current > 0) {
+        currentEl.classList.add("pulse");
+      }
+    }
+
+    function playSound() {
+      if (!callSound) return;
+      callSound.currentTime = 0;
+      callSound.play().catch(function () {});
+    }
+
+    nextBtn.addEventListener("click", function () {
+      const current = getCurrent();
+      const history = getHistory();
+
+      if (current > 0) {
+        history.push(current);
+        setHistory(history);
+      }
+
+      const next = current + 1;
+      setCurrent(next);
+      if (next > 0) playSound();
+    });
+
+    backBtn.addEventListener("click", function () {
+      const history = getHistory();
+      if (history.length === 0) return;
+
+      const previous = history.pop();
+      setHistory(history);
+      setCurrent(previous);
+      if (previous > 0) playSound();
+    });
+
+    repeatBtn.addEventListener("click", function () {
+      const current = getCurrent();
+      if (current > 0) playSound();
+    });
+
+    resetBtn.addEventListener("click", function () {
+      const sure = confirm("هل تريد إعادة تعيين الأرقام والعودة إلى الصفر؟");
+      if (!sure) return;
+      localStorage.removeItem(CURRENT_KEY);
+      localStorage.removeItem(HISTORY_KEY);
+      setCurrent(0);
+    });
+
+    // تحميل الرقم عند فتح الصفحة
+    updateDisplay();
+  </script>
+</body>
+</html>
