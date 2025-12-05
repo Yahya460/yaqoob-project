@@ -1,1 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>نظام الدور – غرفة التجهيز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg1: #020617;
+      --bg2: #0f172a;
+      --accent: #38bdf8;
+      --btn: #2563eb;
+      --btn-dark: #1d4ed8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, Tahoma, Arial;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .page {
+      width: 100%;
+      max-width: 1000px;
+      padding: 18px 14px 8px;
+    }
+    .card {
+      background: rgba(15,23,42,0.96);
+      border-radius: 22px;
+      padding: 18px 18px 14px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      margin-bottom: 14px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+    .logo {
+      max-width: 70px;
+      border-radius: 14px;
+    }
+    .title {
+      margin: 0;
+      font-size: 22px;
+    }
+    .subtitle {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    /* شاشة العرض */
+    .display-title {
+      margin: 8px 0 14px;
+      font-size: 24px;
+    }
+    .ticket-box {
+      background: #020617;
+      border-radius: 28px;
+      padding: 18px 14px;
+      border: 2px solid rgba(148,163,184,0.4);
+      max-width: 420px;
+      margin: 0 auto 6px;
+    }
+    .ticket-label {
+      font-size: 16px;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+    }
+    .ticket-number {
+      font-size: 80px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .note {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    /* لوحة الموظف */
+    .panel-title {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    button {
+      flex: 1 1 160px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #nextBtn {
+      background: var(--btn);
+      color: #fff;
+    }
+    #nextBtn:active {
+      background: var(--btn-dark);
+      transform: scale(0.98);
+    }
+    #backBtn {
+      background: #e5e7eb;
+      color: #020617;
+    }
+    #backBtn:active {
+      background: #d1d5db;
+      transform: scale(0.98);
+    }
+    .info-line {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 640px) {
+      .card { padding: 16px 14px 12px; }
+      .title { font-size: 19px; }
+      .display-title { font-size: 20px; }
+      .ticket-number { font-size: 56px; }
+      .controls { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- الكرت الأول: شاشة العرض -->
+    <section class="card">
+      <div class="header">
+        <img src="logo.png" alt="الشعار" class="logo" />
+        <div>
+          <h2 class="title">يرجى التوجه إلى غرفة التجهيز</h2>
+          <p class="subtitle">يُعرض رقم العميل بشكل واضح على الشاشة</p>
+        </div>
+      </div>
+
+      <div class="ticket-box">
+        <div class="ticket-label">رقم العميل</div>
+        <div id="currentNumber" class="ticket-number">0</div>
+      </div>
+
+      <p class="note">
+        عند نداء عميل جديد من لوحة الموظف سيتم تحديث هذا الرقم وتشغيل النغمة.
+      </p>
+
+      <audio id="callSound" src="yaqoob.mp3" preload="auto"></audio>
+    </section>
+
+    <!-- الكرت الثاني: لوحة الموظف -->
+    <section class="card">
+      <h3 class="panel-title">لوحة الموظف</h3>
+      <div class="controls">
+        <button id="nextBtn">نداء العميل التالي</button>
+        <button id="backBtn">رجوع للعميل السابق</button>
+      </div>
+      <p class="info-line">
+        ملاحظة: هذه الصفحة تجمع بين شاشة العرض ولوحة الموظف معًا. تأكد من إبقائها مفتوحة أثناء العمل.
+      </p>
+    </section>
+
+    <footer>
+      جميع الحقوق محفوظة لـ يحيى آل عبدالسلام – 95359513
+    </footer>
+  </div>
+
+  <script>
+    const CURRENT_KEY = "yaq_cur";
+    const PREV_KEY = "yaq_prev";
+
+    const currentEl = document.getElementById("currentNumber");
+    const nextBtn = document.getElementById("nextBtn");
+    const backBtn = document.getElementById("backBtn");
+    const callSound = document.getElementById("callSound");
+
+    function loadNumbers() {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      currentEl.textContent = current;
+    }
+
+    function playSound() {
+      if (!callSound) return;
+      callSound.currentTime = 0;
+      callSound.play().catch(() => {});
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      const next = current + 1;
+      localStorage.setItem(PREV_KEY, current);     // حفظ العميل السابق
+      localStorage.setItem(CURRENT_KEY, next);     // تعيين العميل الجديد
+      loadNumbers();
+      if (next > 0) playSound();
+    });
+
+    backBtn.addEventListener("click", () => {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      const prev = Number(localStorage.getItem(PREV_KEY)) || 0;
+      if (prev === current) return;
+      // التبديل بين العميل الحالي والسابق
+      localStorage.setItem(CURRENT_KEY, prev);
+      localStorage.setItem(PREV_KEY, current);
+      loadNumbers();
+      if (prev > 0) playSound();
+    });
+
+    loadNumbers();
+  </script>
+</body>
+</html>
 
