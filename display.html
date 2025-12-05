@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>مشروع يعقوب - شاشة العرض</title></head><body>
+<h2>شاشة العرض</h2>
+<div>الرقم الحالي: <span id="c">0</span></div>
+<div>الرقم السابق: <span id="p">0</span></div>
+<audio id="snd" src="yaqoob.mp3" preload="auto"></audio>
+<script>
+const CK='yaq_cur',PK='yaq_prev';let last=-1;function up(){
+let c=Number(localStorage.getItem(CK))||0;let p=Number(localStorage.getItem(PK))||0;
+if(c!==last){document.getElementById('c').textContent=c;document.getElementById('p').textContent=p;
+last=c; if(c>0){let s=document.getElementById('snd'); s.currentTime=0; s.play().catch(()=>{});} }
+}
+setInterval(up,1000);up();
+</script></body></html>
