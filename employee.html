@@ -1,7 +1,141 @@
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>مشروع يعقوب - لوحة الموظف</title></head><body>
-<h2>لوحة الموظف</h2>
-<button onclick="next()">نداء الرقم التالي</button>
-<script>
-const CK='yaq_cur',PK='yaq_prev';
-function next(){let c=Number(localStorage.getItem(CK))||0;localStorage.setItem(PK,c);localStorage.setItem(CK,c+1);}
-</script></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>مشروع يعقوب – لوحة الموظف</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, Tahoma, Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 24px 22px;
+      max-width: 430px;
+      width: 100%;
+      box-shadow: 0 16px 35px rgba(15, 23, 42, 0.18);
+      text-align: center;
+    }
+    .logo {
+      max-width: 130px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 4px 0 18px;
+    }
+    .numbers {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .box {
+      flex: 1;
+      background: #f3f4f6;
+      border-radius: 16px;
+      padding: 10px;
+    }
+    .box-title {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .box-number {
+      font-size: 32px;
+      font-weight: 700;
+      margin-top: 6px;
+      color: #111827;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 16px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      cursor: pointer;
+    }
+    button:active {
+      background: var(--accent-dark);
+      transform: scale(0.98);
+    }
+    .note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    @media (max-width: 640px) {
+      .card {
+        margin: 0 10px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="logo.png" alt="شعار مشروع يعقوب" class="logo" />
+    <h1>مشروع يعقوب – لوحة الموظف</h1>
+
+    <div class="numbers">
+      <div class="box">
+        <div class="box-title">الرقم الحالي</div>
+        <div id="currentNumber" class="box-number">0</div>
+      </div>
+      <div class="box">
+        <div class="box-title">الرقم السابق</div>
+        <div id="prevNumber" class="box-number">0</div>
+      </div>
+    </div>
+
+    <button id="nextBtn">نداء الرقم التالي</button>
+
+    <div class="note">
+      تأكد أن شاشة العرض مفتوحة في نفس المتصفح حتى يتم التحديث وتشغيل الصوت.
+    </div>
+  </div>
+
+  <script>
+    const CURRENT_KEY = "yaq_cur";
+    const PREV_KEY = "yaq_prev";
+
+    const currentEl = document.getElementById("currentNumber");
+    const prevEl = document.getElementById("prevNumber");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function loadNumbers() {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      const prev = Number(localStorage.getItem(PREV_KEY)) || 0;
+      currentEl.textContent = current;
+      prevEl.textContent = prev;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      const next = current + 1;
+      localStorage.setItem(PREV_KEY, current);
+      localStorage.setItem(CURRENT_KEY, next);
+      loadNumbers();
+    });
+
+    loadNumbers();
+  </script>
+</body>
+</html>
