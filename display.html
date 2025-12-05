@@ -1,13 +1,134 @@
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>مشروع يعقوب - شاشة العرض</title></head><body>
-<h2>شاشة العرض</h2>
-<div>الرقم الحالي: <span id="c">0</span></div>
-<div>الرقم السابق: <span id="p">0</span></div>
-<audio id="snd" src="yaqoob.mp3" preload="auto"></audio>
-<script>
-const CK='yaq_cur',PK='yaq_prev';let last=-1;function up(){
-let c=Number(localStorage.getItem(CK))||0;let p=Number(localStorage.getItem(PK))||0;
-if(c!==last){document.getElementById('c').textContent=c;document.getElementById('p').textContent=p;
-last=c; if(c>0){let s=document.getElementById('snd'); s.currentTime=0; s.play().catch(()=>{});} }
-}
-setInterval(up,1000);up();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>مشروع يعقوب – شاشة العرض</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg1: #020617;
+      --bg2: #0f172a;
+      --accent: #38bdf8;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, Tahoma, Arial;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      padding: 20px;
+    }
+    .logo {
+      max-width: 200px;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 28px;
+      margin: 0 0 24px;
+    }
+    .numbers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .card {
+      flex: 1 1 240px;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 22px;
+      padding: 18px 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+    .card-label {
+      font-size: 18px;
+      color: #cbd5f5;
+      margin-bottom: 10px;
+    }
+    .card-number {
+      font-size: 80px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .footer {
+      margin-top: 24px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    @media (max-width: 640px) {
+      .title {
+        font-size: 22px;
+      }
+      .card-number {
+        font-size: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="شعار مشروع يعقوب" class="logo" />
+    <h1 class="title">مشروع يعقوب – شاشة العرض</h1>
+
+    <div class="numbers">
+      <div class="card">
+        <div class="card-label">الرقم الحالي</div>
+        <div id="currentNumber" class="card-number">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">الرقم السابق</div>
+        <div id="prevNumber" class="card-number">0</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      عند نداء رقم جديد من لوحة الموظف سيتم تحديث الشاشة وتشغيل نغمة مشروع يعقوب.
+    </div>
+
+    <audio id="callSound" src="yaqoob.mp3" preload="auto"></audio>
+  </div>
+
+  <script>
+    const CURRENT_KEY = "yaq_cur";
+    const PREV_KEY = "yaq_prev";
+
+    const currentEl = document.getElementById("currentNumber");
+    const prevEl = document.getElementById("prevNumber");
+    const callSound = document.getElementById("callSound");
+
+    let lastShown = -1;
+
+    function updateScreen() {
+      const current = Number(localStorage.getItem(CURRENT_KEY)) || 0;
+      const prev = Number(localStorage.getItem(PREV_KEY)) || 0;
+
+      if (current !== lastShown) {
+        currentEl.textContent = current;
+        prevEl.textContent = prev;
+        lastShown = current;
+
+        if (current > 0) {
+          callSound.currentTime = 0;
+          callSound.play().catch(() => {
+            // بعض المتصفحات تمنع التشغيل التلقائي للصوت،
+            // يكفي ضغطة واحدة على الشاشة في البداية لتفعيل الصوت.
+          });
+        }
+      }
+    }
+
+    setInterval(updateScreen, 1000);
+    updateScreen();
+  </script>
+</body>
+</html>
