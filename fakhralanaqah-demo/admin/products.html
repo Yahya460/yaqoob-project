@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>إدارة المنتجات | فخر الأناقة</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+  <style>
+    .mini{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="nav">
+    <div class="brand">
+      <div class="fa-logoWrap" style="position:relative;width:44px;height:44px">
+  <div class="logo fa-logoFallback">FA</div>
+  <img class="fa-logoImg" src="/assets/logo.png" alt="Fakhr Alanaqah logo"
+    style="display:none;width:44px;height:44px;border-radius:14px;object-fit:contain;background:linear-gradient(135deg,var(--gold),#3a2f10);border:1px solid rgba(214,179,94,.35);"/>
+</div>
+</div>
+    <div class="links">
+      <a class="pill" href="/admin/">لوحة يعقوب</a>
+            <a class="pill" href="/">الرئيسية</a>
+    </div>
+  </div>
+
+  <div class="hero" style="margin-top:16px">
+    <h2 style="margin:0 0 8px">قبل البدء</h2>
+    <p class="notice" style="margin:0">
+      لازم تضع رابط الـWeb App مرة واحدة داخل الملف: <b>/assets/config.js</b> ثم ترفع الموقع. بعد الربط، أي إضافة هنا تنحفظ في الشيت فورًا.
+    </p>
+  </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>PIN يعقوب (للحفظ في الشيت)</label>
+        <input id="adminPin" type="password" placeholder="أدخل PIN ثم سيتم حفظه لهذه الجلسة فقط" />
+        <div class="mini">يحفظ في هذا المتصفح مؤقتًا (Session) فقط.</div>
+      </div>
+      <div>
+        <label>اختبار الاتصال</label>
+        <button class="btn" id="testApi">اختبار</button>
+        <div id="testMsg" class="mini"></div>
+      </div>
+    </div>
+
+  <div class="sectionTitle">إضافة منتج واحد</div>
+  <div class="form">
+    <div class="split">
+      <div>
+        <label>SKU (مثال: B201)</label>
+        <input id="sku" placeholder="B201" />
+      </div>
+      <div>
+        <label>الاسم</label>
+        <input id="name" placeholder="بشت" />
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>سعر البيع (ر.ع)</label>
+        <input id="sale" type="number" step="0.1" value="50" />
+      </div>
+      <div>
+        <label>سعر الإيجار/يوم (ر.ع)</label>
+        <input id="rent" type="number" step="0.1" value="10" />
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>العربون (ر.ع)</label>
+        <input id="deposit" type="number" step="0.1" value="5" />
+      </div>
+      <div>
+        <label>القسم</label>
+        <select id="cat">
+          <option>رجال</option>
+          <option>نساء</option>
+          <option>أولاد</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <label>المقاسات (اختياري، افصل بفاصلة)</label>
+      <input id="sizes" placeholder="S,M,L,XL" />
+      <div class="mini">لو تركتها فاضية نستخدم "مقاس واحد".</div>
+    </div>
+
+    <div style="margin-top:12px">
+      <label>رابط الصورة (اختياري)</label>
+      <input id="imgUrl" placeholder="https://...  أو رابط Google Drive" />
+      <div class="mini">لو كنت تستخدم Google Drive: افتح الصورة → مشاركة → (أي شخص لديه الرابط) → انسخ الرابط والصقه هنا. النظام يحوّل الرابط تلقائيًا.</div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="addOne">إضافة</button>
+      <span id="m1" class="notice"></span>
+    </div>
+  </div>
+
+  <div class="sectionTitle">إضافة دفعة بالترقيم</div>
+  <div class="form">
+    <div class="split">
+      <div>
+        <label>Prefix</label>
+        <select id="prefix">
+          <option value="B">B (بشت)</option>
+          <option value="K">K (كِمّة)</option>
+          <option value="A">A (عصى)</option>
+          <option value="KH">KH (خنجر)</option>
+        </select>
+      </div>
+      <div>
+        <label>عدد القطع الجديدة</label>
+        <input id="count" type="number" value="50" />
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>الاسم</label>
+        <input id="bName" placeholder="بشت" />
+      </div>
+      <div>
+        <label>رابط صورة (اختياري)</label>
+        <input id="bImgUrl" placeholder="https://... أو Google Drive" />
+        <div class="mini">سيُستخدم لنفس الدفعة (إذا عندك صورة عامة). للصور المختلفة لكل منتج، أضفها لاحقًا لكل SKU.</div>
+      </div>
+      <div>
+        <label>القسم</label>
+        <select id="bCat">
+          <option>رجال</option>
+          <option>نساء</option>
+          <option>أولاد</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>سعر البيع (ر.ع)</label>
+        <input id="bSale" type="number" step="0.1" value="50" />
+      </div>
+      <div>
+        <label>سعر الإيجار/يوم (ر.ع)</label>
+        <input id="bRent" type="number" step="0.1" value="10" />
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:12px">
+      <div>
+        <label>العربون (ر.ع)</label>
+        <input id="bDeposit" type="number" step="0.1" value="5" />
+      </div>
+      <div>
+        <label>المقاسات (اختياري)</label>
+        <input id="bSizes" placeholder="S,M,L,XL" />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="addBatch">إضافة الدفعة</button>
+      <span id="m2" class="notice"></span>
+    </div>
+    <div class="mini" style="margin-top:8px">
+      النظام يقرأ آخر رقم موجود لهذا الـPrefix داخل الشيت ويبدأ من بعده تلقائيًا (مثال: إذا آخر بشت B100 → يبدأ B101).
+    </div>
+  </div>
+
+  <div class="sectionTitle">عرض سريع للمنتجات من الشيت</div>
+  <div class="form">
+    <div class="row">
+      <button class="btn" id="reload">تحديث</button>
+      <span id="m3" class="notice"></span>
+    </div>
+    <div id="list" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div class="footer">© Fakhr Alanaqah – Demo</div>
+</div>
+
+<script src="/assets/config.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+(function(){
+  const img=document.getElementById('logoImg'), box=document.getElementById('logoBox');
+  if(img){ img.onload=()=>{img.style.display='block'; if(box) box.style.display='none';}; }
+})();
+
+function parseSizes(s){
+  const t = String(s||'').trim();
+  if(!t) return ["مقاس واحد"];
+  return t.split(',').map(x=>x.trim()).filter(Boolean);
+}
+
+document.getElementById('addOne').onclick = async ()=>{
+  const m1 = document.getElementById('m1');
+  m1.textContent = "جارِ الإضافة...";
+  try{
+    const payload = {
+      sku: document.getElementById('sku').value.trim().toUpperCase().replace('-', ''),
+      name: document.getElementById('name').value.trim(),
+      sale: Number(document.getElementById('sale').value||0),
+      rent_day: Number(document.getElementById('rent').value||0),
+      deposit: Number(document.getElementById('deposit').value||0),
+      cat: document.getElementById('cat').value,
+      sizes: parseSizes(document.getElementById('sizes').value),
+      thumb: (document.getElementById('imgUrl')?.value||'').trim() || (document.getElementById('sku').value.trim().toUpperCase().match(/^([A-Z]{1,2})/)||[])[1] || ''
+    };
+    setSessionPin('admin', document.getElementById('adminPin').value);
+    await apiPost('addOne', {...payload, pin: getSessionPin('admin')});
+    m1.textContent = "✅ تمت الإضافة";
+  }catch(e){
+    m1.textContent = "❌ " + (e.message||e);
+  }
+};
+
+document.getElementById('addBatch').onclick = async ()=>{
+  const m2 = document.getElementById('m2');
+  m2.textContent = "جارِ الإضافة...";
+  try{
+    const payload = {
+      prefix: document.getElementById('prefix').value,
+      count: Number(document.getElementById('count').value||0),
+      name: document.getElementById('bName').value.trim(),
+      sale: Number(document.getElementById('bSale').value||0),
+      rent_day: Number(document.getElementById('bRent').value||0),
+      deposit: Number(document.getElementById('bDeposit').value||0),
+      cat: document.getElementById('bCat').value,
+      sizes: parseSizes(document.getElementById('bSizes').value),
+      thumb: (document.getElementById('imgUrl')?.value||'').trim() || document.getElementById('prefix').value
+    };
+    setSessionPin('admin', document.getElementById('adminPin').value);
+    const out = await apiPost('addBatch', {...payload, pin: getSessionPin('admin')});
+    m2.textContent = `✅ تمت إضافة ${out.added||0} منتج (من ${out.from||''} إلى ${out.to||''})`;
+  }catch(e){
+    m2.textContent = "❌ " + (e.message||e);
+  }
+};
+
+document.getElementById('testApi').onclick = async ()=>{
+  const el=document.getElementById('testMsg');
+  el.textContent='...';
+  try{
+    const out = await apiGet('list');
+    el.textContent='✅ اتصال ناجح. عدد المنتجات: '+(out.products||[]).length;
+  }catch(e){
+    el.textContent='❌ '+(e.message||e);
+  }
+};
+
+document.getElementById('reload').onclick = async ()=>{
+  const m3 = document.getElementById('m3');
+  const list = document.getElementById('list');
+  m3.textContent = "جارِ التحميل...";
+  try{
+    const items = await PRODUCTS();
+    m3.textContent = `✅ عدد المنتجات: ${items.length}`;
+    list.innerHTML = items.slice(0,30).map(p=>`${p.sku} - ${p.name} (بيع ${p.sale} / إيجار ${p.rent_day})`).join("<br/>") +
+      (items.length>30 ? "<br/>..." : "");
+  }catch(e){
+    m3.textContent = "❌ " + (e.message||e);
+    list.innerHTML = "";
+  }
+};
+</script>
+
+<script>
+(function faInitLogo(){
+  const imgs = document.querySelectorAll('.fa-logoImg');
+  imgs.forEach(img=>{
+    const wrap = img.closest('.fa-logoWrap') || img.parentElement;
+    const fallback = wrap ? wrap.querySelector('.fa-logoFallback') : null;
+    img.onload = ()=>{ img.style.display='block'; if(fallback) fallback.style.display='none'; };
+    img.onerror = ()=>{ /* keep fallback */ };
+    // trigger for cached images
+    if(img.complete && img.naturalWidth>0){ img.onload(); }
+  });
+})();
+</script>
+
+</body>
+</html>

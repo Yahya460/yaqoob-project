@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>فخر الأناقة | Fakhr Alanaqah (تجريبي)</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <!-- استبدل هذا المربع بصورة الشعار لاحقاً: ضع logo.png داخل /assets ثم غيّر العنصر إلى <img> -->
+        <div class="fa-logoWrap" style="position:relative;width:44px;height:44px">
+  <div class="logo fa-logoFallback">FA</div>
+  <img class="fa-logoImg" src="/assets/logo.png" alt="Fakhr Alanaqah logo"
+    style="display:none;width:44px;height:44px;border-radius:14px;object-fit:contain;background:linear-gradient(135deg,var(--gold),#3a2f10);border:1px solid rgba(214,179,94,.35);"/>
+</div>
+</div>
+      <div class="links">
+        <a class="pill" href="/staff/">لوحة الموظف (QR)</a>
+        <a class="pill" href="/admin/">لوحة يعقوب</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h2>أناقة المناسبات… بلمسة ذكية</h2>
+      <p>
+        اختر القطعة، حدّد المقاس (إن وجد) والتأجير اليومي. العربون ثابت <b style="color:var(--gold)">5 ر.ع</b>.
+        إشعارات واتساب للحجوزات مفعّلة (تجريبي).
+      </p>
+      <div class="kv">
+        <div class="chip">التأجير: يومي</div>
+        <div class="chip">غرامة التأخير: 5 ر.ع / يوم</div>
+        <div class="chip">QR للموظف فقط</div>
+        <div class="chip">ترقيم القطع: SKU</div>
+      </div>
+    </div>
+
+    <div class="sectionTitle">منتجات الرجال (مبدئيًا)</div>
+    <div id="grid" class="grid"></div>
+
+    <div class="footer">
+      <div>ملاحظة: هذه نسخة تصميم/تجربة بدون حجز ودفع فعليين بعد.</div>
+      <div>© Fakhr Alanaqah – Demo</div>
+    </div>
+  </div>
+
+<script src="/assets/config.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+(async ()=>{
+  const items = await PRODUCTS();
+  const grid = document.getElementById('grid');
+  grid.innerHTML = items.map(p=>`
+    <a class="card" href="/product.html?sku=${encodeURIComponent(p.sku)}">
+      <div class="thumb">${(()=>{const u=toImageUrl(p.thumb); if(u){return '<img src="'+u+'" alt="'+String(p.name).replace(/"/g,'&quot;')+'">';} return '<div class="thumbText">'+String(p.thumb||"").slice(0,3)+'</div>';})()}</div>`}</div>
+      <div class="meta">
+        <h3>${p.name} <span style="color:var(--gold)">(${p.sku})</span></h3>
+        <div class="badges">
+          <span class="badge gold">تأجير يومي</span>
+          <span class="badge">عربون ${fmtOMR(p.deposit)}</span>
+          <span class="badge">قسم ${p.cat}</span>
+        </div>
+        <div class="row">
+          <div class="price">البيع: <b>${fmtOMR(p.sale)}</b></div>
+          <div class="price">الإيجار/يوم: <b>${fmtOMR(p.rent_day)}</b></div>
+          <span class="btn primary">عرض التفاصيل</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+})();
+</script>
+
+<script>
+(function(){
+  const img = document.getElementById('logoImg');
+  const box = document.getElementById('logoBox');
+  if(!img) return;
+  img.onload = ()=>{ img.style.display='block'; if(box) box.style.display='none'; };
+  img.onerror = ()=>{ /* keep fallback */ };
+})();
+</script>
+
+
+<script>
+(function faInitLogo(){
+  const imgs = document.querySelectorAll('.fa-logoImg');
+  imgs.forEach(img=>{
+    const wrap = img.closest('.fa-logoWrap') || img.parentElement;
+    const fallback = wrap ? wrap.querySelector('.fa-logoFallback') : null;
+    img.onload = ()=>{ img.style.display='block'; if(fallback) fallback.style.display='none'; };
+    img.onerror = ()=>{ /* keep fallback */ };
+    // trigger for cached images
+    if(img.complete && img.naturalWidth>0){ img.onload(); }
+  });
+})();
+</script>
+
+</body>
+</html>

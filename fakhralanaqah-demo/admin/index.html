@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>لوحة يعقوب | فخر الأناقة (تجريبي)</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="nav">
+    <div class="brand">
+      <div class="fa-logoWrap" style="position:relative;width:44px;height:44px">
+  <div class="logo fa-logoFallback">FA</div>
+  <img class="fa-logoImg" src="/assets/logo.png" alt="Fakhr Alanaqah logo"
+    style="display:none;width:44px;height:44px;border-radius:14px;object-fit:contain;background:linear-gradient(135deg,var(--gold),#3a2f10);border:1px solid rgba(214,179,94,.35);"/>
+</div>
+</div>
+    <div class="links">
+      <a class="pill" href="/">الرئيسية</a>
+      <a class="pill" href="/staff/">لوحة الموظف</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h2 style="margin:0 0 8px">الملخص</h2>
+    <p class="notice">هذه صفحة “شكل” للوحة يعقوب. التقارير الحقيقية ستُربط ببيانات الحجوزات والدفع لاحقًا.</p>
+
+    <table class="table" aria-label="summary">
+      <tr><td>إيراد اليوم</td><td><b style="color:var(--gold)">0 ر.ع</b> (تجريبي)</td></tr>
+      <tr><td>إيراد الشهر</td><td><b style="color:var(--gold)">0 ر.ع</b> (تجريبي)</td></tr>
+      <tr><td>عدد الحجوزات</td><td>0</td></tr>
+      <tr><td>غرامات التأخير</td><td>0 ر.ع</td></tr>
+    </table>
+    <div class="row" style="margin-top:12px">
+      <a class="btn primary" href="/admin/qr.html">طباعة QR للمنتجات</a>
+      <a class="btn" href="/admin/products.html">إدارة المنتجات</a>
+      <a class="btn" href="/assets/config.js">ملف الإعدادات</a>
+    </div>
+
+  </div>
+
+  <div class="sectionTitle">المنتجات (مبدئيًا)</div>
+  <div id="grid" class="grid"></div>
+
+  <div class="footer">© Fakhr Alanaqah – Demo</div>
+</div>
+
+<script src="/assets/config.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+(async ()=>{
+  const items = await PRODUCTS();
+  const grid = document.getElementById('grid');
+  grid.innerHTML = items.map(p=>`
+    <div class="card">
+      <div class="thumb">${p.thumb}</div>
+      <div class="meta">
+        <h3>${p.name} <span style="color:var(--gold)">(${p.sku})</span></h3>
+        <div class="price">بيع: <b>${fmtOMR(p.sale)}</b> · إيجار/يوم: <b>${fmtOMR(p.rent_day)}</b> · عربون: <b>${fmtOMR(p.deposit)}</b></div>
+        <div class="small" style="margin-top:8px">سيتم ربط (المخزون/الحجوزات/التقارير) لاحقًا في النسخة الكاملة.</div>
+      </div>
+    </div>
+  `).join('');
+})();
+</script>
+
+<script>
+(function(){
+  const img = document.getElementById('logoImg');
+  const box = document.getElementById('logoBox');
+  if(!img) return;
+  img.onload = ()=>{ img.style.display='block'; if(box) box.style.display='none'; };
+  img.onerror = ()=>{ /* keep fallback */ };
+})();
+</script>
+
+
+<script>
+(function faInitLogo(){
+  const imgs = document.querySelectorAll('.fa-logoImg');
+  imgs.forEach(img=>{
+    const wrap = img.closest('.fa-logoWrap') || img.parentElement;
+    const fallback = wrap ? wrap.querySelector('.fa-logoFallback') : null;
+    img.onload = ()=>{ img.style.display='block'; if(fallback) fallback.style.display='none'; };
+    img.onerror = ()=>{ /* keep fallback */ };
+    // trigger for cached images
+    if(img.complete && img.naturalWidth>0){ img.onload(); }
+  });
+})();
+</script>
+
+</body>
+</html>
