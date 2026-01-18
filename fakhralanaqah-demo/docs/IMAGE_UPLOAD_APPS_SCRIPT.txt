@@ -1,0 +1,35 @@
+ميزة رفع الصورة من الموقع تحتاج إضافة Action جديدة في Apps Script اسمها: uploadImage
+
+انسخ هذا الكود (أو أضفه) داخل مشروع Apps Script عندك ثم أعد (Deploy > Manage deployments) نفس الـWeb App.
+
+----
+// ضع هذا الثابت أعلى الملف
+const IMG_FOLDER_NAME = 'FAKHR_ALANAQAH_IMAGES';
+
+function getImgFolder_(){
+  const it = DriveApp.getFoldersByName(IMG_FOLDER_NAME);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(IMG_FOLDER_NAME);
+}
+
+function saveBase64Image_(dataUrl, filename){
+  const m = String(dataUrl||'').match(/^data:(.+?);base64,(.+)$/);
+  if(!m) throw new Error('BAD_DATAURL');
+  const mime = m[1];
+  const bytes = Utilities.base64Decode(m[2]);
+  const safeName = filename ? String(filename).replace(/[^\w.\-]+/g,'_') : ('img_'+Date.now()+'.png');
+  const blob = Utilities.newBlob(bytes, mime, safeName);
+  const folder = getImgFolder_();
+  const file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const id = file.getId();
+  return 'https://drive.google.com/uc?export=view&id='+id;
+}
+
+// داخل doPost بعد قراءة body/action
+// if(action === 'uploadImage'){
+//   const url = saveBase64Image_(body.dataUrl, body.filename);
+//   return json_({ok:true, url});
+// }
+----
+
+ملاحظة: أول مرة تستخدم الرفع قد يطلب منك Google صلاحيات Drive (طبيعي).

@@ -41,13 +41,7 @@
     </p>
   </div>
 
-    <div class="split" style="margin-top:12px">
-      <!-- تم إخفاء الـPIN مؤقتاً (بدون حماية) -->
-      <div style="display:none">
-        <label>PIN</label>
-        <input id="adminPin" type="password" />
-      </div>
-      <div>
+    <div class="split" style="margin-top:12px"><div>
         <label>اختبار الاتصال</label>
         <button class="btn" id="testApi">اختبار</button>
         <div id="testMsg" class="mini"></div>
@@ -101,6 +95,11 @@
 
     <div style="margin-top:12px">
       <label>رابط الصورة (اختياري)</label>
+      <div class="split" style="margin-top:8px; gap:8px; align-items:center;">
+        <input id="imgFile" type="file" accept="image/*" style="flex:1" />
+        <button class="btn" id="uploadImgBtn" type="button">رفع الصورة</button>
+        <span class="mini" id="uploadImgStatus"></span>
+      </div>
       <input id="imgUrl" placeholder="https://...  أو رابط Google Drive" />
       <div class="mini">لو كنت تستخدم Google Drive: افتح الصورة → مشاركة → (أي شخص لديه الرابط) → انسخ الرابط والصقه هنا. النظام يحوّل الرابط تلقائيًا.</div>
     </div>
@@ -211,6 +210,7 @@
       </div>
       <div class="row" style="justify-content:flex-end; gap:8px; align-items:flex-end">
         <button class="btn" id="reload">تحديث</button>
+        <button class="btn" id="printLabels" type="button">طباعة ملصقات</button>
         <button class="btn" id="clearFilters">مسح</button>
         <span id="m3" class="notice"></span>
       </div>
@@ -269,8 +269,7 @@ document.getElementById('addOne').onclick = async ()=>{
       sizes: parseSizes(document.getElementById('sizes').value),
       thumb: (document.getElementById('imgUrl')?.value||'').trim() || (document.getElementById('sku').value.trim().toUpperCase().match(/^([A-Z]{1,2})/)||[])[1] || ''
     };
-    setSessionPin('admin', document.getElementById('adminPin').value);
-    await apiPost('addOne', {...payload, pin: getSessionPin('admin')});
+    await apiPost('addOne', {...payload});
     m1.textContent = "✅ تمت الإضافة";
   }catch(e){
     m1.textContent = "❌ " + (e.message||e);
@@ -292,8 +291,7 @@ document.getElementById('addBatch').onclick = async ()=>{
       sizes: parseSizes(document.getElementById('bSizes').value),
       thumb: (document.getElementById('imgUrl')?.value||'').trim() || document.getElementById('prefix').value
     };
-    setSessionPin('admin', document.getElementById('adminPin').value);
-    const out = await apiPost('addBatch', {...payload, pin: getSessionPin('admin')});
+    const out = await apiPost('addBatch', {...payload});
     m2.textContent = `✅ تمت إضافة ${out.added||0} منتج (من ${out.from||''} إلى ${out.to||''})`;
   }catch(e){
     m2.textContent = "❌ " + (e.message||e);
@@ -310,6 +308,36 @@ document.getElementById('testApi').onclick = async ()=>{
     el.textContent='❌ '+(e.message||e);
   }
 };
+
+
+// طباعة ملصقات
+document.getElementById("printLabels")?.addEventListener("click", ()=>{
+  window.open("/admin/labels.html", "_blank");
+});
+
+// رفع صورة إلى Google Drive (يتطلب دعم uploadImage في Apps Script)
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(String(r.result||""));
+    r.onerror=()=>reject(r.error||new Error("READ_FAIL"));
+    r.readAsDataURL(file);
+  });
+}
+document.getElementById("uploadImgBtn")?.addEventListener("click", async ()=>{
+  const st=document.getElementById("uploadImgStatus");
+  const f=(document.getElementById("imgFile")||{}).files?.[0];
+  if(!f){ if(st) st.textContent="اختر صورة أولاً"; return; }
+  if(st) st.textContent="جارِ الرفع...";
+  try{
+    const dataUrl = await fileToDataURL(f);
+    const out = await apiPost("uploadImage", { filename: f.name, dataUrl });
+    if(out && out.url){ document.getElementById("imgUrl").value = out.url; }
+    if(st) st.textContent= out && out.url ? "✅ تم رفع الصورة" : "تم الرفع";
+  }catch(e){
+    if(st) st.textContent = "❌ " + (e.message||e);
+  }
+});
 
 // ===== Products table (view) =====
 const __state = { all: [] };

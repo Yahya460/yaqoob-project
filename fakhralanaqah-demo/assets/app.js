@@ -79,6 +79,7 @@ async function apiPost(action, payload={}){
   if(!baseUrl || baseUrl.includes('PASTE_APPS_SCRIPT_WEBAPP_URL_HERE')) throw new Error('API_NOT_SET');
   const res = await fetch(baseUrl, {
     method:'POST',
+    headers: { 'Content-Type': 'application/json' },
 
     body: JSON.stringify({action, ...payload})
   });

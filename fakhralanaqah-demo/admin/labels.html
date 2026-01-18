@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>طباعة ملصقات المنتجات</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+  <style>
+    .page{max-width:1100px; margin:18px auto;}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:end;}
+    .controls .field{flex:1; min-width:200px;}
+    .labels{margin-top:16px; display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;}
+    .label{border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:10px; background:rgba(0,0,0,.25);}
+    .label .top{display:flex; gap:10px; align-items:center;}
+    .thumb{width:64px; height:64px; border-radius:12px; object-fit:cover; background:rgba(255,255,255,.06);}
+    .name{font-weight:700;}
+    .sku{opacity:.85; font-size:12px; margin-top:2px;}
+    .price{margin-top:6px; font-weight:700;}
+    .barcodeWrap{margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    svg.barcode{width:100%; max-width:220px; height:56px;}
+    .mini{opacity:.8; font-size:12px;}
+    @media print{
+      body{background:#fff !important;}
+      .noPrint{display:none !important;}
+      .label{break-inside:avoid; page-break-inside:avoid; border:1px solid #ccc; background:#fff;}
+      .labels{grid-template-columns:repeat(3, 1fr); gap:10px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card noPrint">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <h2 style="margin:0">طباعة ملصقات المنتجات</h2>
+        <a class="btn" href="/admin/products.html">العودة للمنتجات</a>
+      </div>
+      <div class="controls" style="margin-top:12px">
+        <div class="field">
+          <label>القسم</label>
+          <select id="cat">
+            <option value="">الكل</option>
+            <option value="رجال">رجال</option>
+            <option value="نساء">نساء</option>
+            <option value="أطفال">أطفال</option>
+            <option value="اكسسوارات">اكسسوارات</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>بحث (بالاسم أو SKU)</label>
+          <input id="q" placeholder="مثال: بشت / B201" />
+        </div>
+        <div class="field" style="max-width:220px">
+          <label>عدد النسخ لكل منتج</label>
+          <input id="copies" type="number" min="1" value="1" />
+        </div>
+        <div class="field" style="max-width:240px">
+          <button class="btn" id="build">تجهيز الملصقات</button>
+          <button class="btn" id="print">طباعة</button>
+        </div>
+      </div>
+      <div class="mini" id="status" style="margin-top:10px"></div>
+      <div class="mini" style="margin-top:6px">ملاحظة: الباركود يتم توليده من رقم SKU. الصور تظهر فقط إذا كان رابط الصورة مباشرًا (Direct).</div>
+    </div>
+
+    <div class="labels" id="labels"></div>
+  </div>
+
+  <script src="/assets/config.js"></script>
+  <script src="/assets/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script>
+    const $ = (s)=>document.querySelector(s);
+    const status = $('#status');
+
+    async function load(){
+      status.textContent = 'تحميل المنتجات...';
+      const list = await PRODUCTS();
+      status.textContent = `تم التحميل (${list.length})`;
+      return list;
+    }
+
+    function directThumb(u){
+      if(!u) return '';
+      // Convert common Drive share links to direct view
+      const m = String(u).match(/drive\.google\.com\/file\/d\/([^\/]+)/);
+      if(m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+      return u;
+    }
+
+    function makeLabel(item){
+      const d = document.createElement('div');
+      d.className='label';
+      const thumb = directThumb(item.thumb || item.imageUrl || '');
+      d.innerHTML = `
+        <div class="top">
+          <img class="thumb" src="${thumb}" onerror="this.style.display='none'" />
+          <div style="flex:1">
+            <div class="name">${escapeHtml(item.name || '')}</div>
+            <div class="sku">SKU: ${escapeHtml(item.sku || '')}</div>
+            <div class="price">${escapeHtml(item.sale || '')} ر.ع</div>
+          </div>
+        </div>
+        <div class="barcodeWrap">
+          <svg class="barcode" jsbarcode-value="${escapeHtml(item.sku || '')}"></svg>
+        </div>
+      `;
+      return d;
+    }
+
+    function escapeHtml(s){
+      return String(s??'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    let ALL=[];
+    load().then(list=>{ALL=list; build();}).catch(err=>{status.textContent='خطأ: '+(err?.message||err)});
+
+    function build(){
+      const cat = $('#cat').value.trim();
+      const q = $('#q').value.trim().toLowerCase();
+      const copies = Math.max(1, parseInt($('#copies').value||'1',10));
+      const filtered = ALL.filter(x=>{
+        const okCat = !cat || (String(x.cat||'').trim()===cat);
+        const hay = (String(x.name||'')+' '+String(x.sku||'')).toLowerCase();
+        const okQ = !q || hay.includes(q);
+        return okCat && okQ;
+      });
+
+      const wrap = $('#labels');
+      wrap.innerHTML='';
+      for(const it of filtered){
+        for(let i=0;i<copies;i++) wrap.appendChild(makeLabel(it));
+      }
+
+      // Render barcodes
+      const svgs = wrap.querySelectorAll('svg.barcode');
+      svgs.forEach(svg=>{
+        const v = svg.getAttribute('jsbarcode-value') || '';
+        try{
+          JsBarcode(svg, v, {format:'CODE128', displayValue:false, margin:0, height:54});
+        }catch(e){
+          // fallback: show text
+          svg.outerHTML = `<div class="mini">${escapeHtml(v)}</div>`;
+        }
+      });
+
+      status.textContent = `جاهز للطباعة: ${filtered.length} منتج (نسخ: ${copies})`;
+    }
+
+    $('#build').addEventListener('click', build);
+    $('#print').addEventListener('click', ()=>window.print());
+    $('#cat').addEventListener('change', build);
+    $('#q').addEventListener('input', ()=>{clearTimeout(window.__t); window.__t=setTimeout(build, 250);});
+  </script>
+</body>
+</html>
