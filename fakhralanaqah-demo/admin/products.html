@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="/assets/styles.css"/>
   <style>
     .mini{font-size:12px;color:var(--muted)}
+    .tableWrap{margin-top:10px;overflow:auto;border:1px solid rgba(214,179,94,.18);border-radius:18px;background:rgba(0,0,0,.18)}
+    table.tbl{width:100%;border-collapse:separate;border-spacing:0}
+    .tbl th,.tbl td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;vertical-align:middle}
+    .tbl thead th{position:sticky;top:0;background:rgba(10,10,10,.92);z-index:2;color:var(--muted);text-align:right}
+    .tbl tr:hover td{background:rgba(255,255,255,.03)}
+    .thumb{width:44px;height:44px;border-radius:14px;object-fit:cover;border:1px solid rgba(214,179,94,.25);background:#111}
+    .badge{display:inline-block;padding:4px 9px;border:1px solid rgba(214,179,94,.25);border-radius:999px;font-size:12px;color:var(--muted)}
+    .btnSm{padding:6px 10px;border-radius:12px;font-size:12px}
+    .nowrap{white-space:nowrap}
   </style>
 </head>
 <body>
@@ -171,13 +180,61 @@
     </div>
   </div>
 
-  <div class="sectionTitle">عرض سريع للمنتجات من الشيت</div>
+  <div class="sectionTitle">عرض المنتجات</div>
   <div class="form">
-    <div class="row">
-      <button class="btn" id="reload">تحديث</button>
-      <span id="m3" class="notice"></span>
+    <div class="split">
+      <div>
+        <label>بحث (بالاسم أو SKU)</label>
+        <input id="q" placeholder="مثال: بشت / B201" autocomplete="off" />
+      </div>
+      <div>
+        <label>القسم</label>
+        <select id="filterCat">
+          <option value="">الكل</option>
+          <option value="رجال">رجال</option>
+          <option value="نساء">نساء</option>
+          <option value="أطفال">أطفال</option>
+        </select>
+      </div>
     </div>
-    <div id="list" class="small" style="margin-top:10px"></div>
+
+    <div class="split" style="margin-top:10px">
+      <div>
+        <label>ترتيب</label>
+        <select id="sortBy">
+          <option value="new">الأحدث (حسب ترتيب الشيت)</option>
+          <option value="sku">SKU</option>
+          <option value="name">الاسم</option>
+          <option value="sale">سعر البيع</option>
+          <option value="rent">سعر الإيجار/يوم</option>
+        </select>
+      </div>
+      <div class="row" style="justify-content:flex-end; gap:8px; align-items:flex-end">
+        <button class="btn" id="reload">تحديث</button>
+        <button class="btn" id="clearFilters">مسح</button>
+        <span id="m3" class="notice"></span>
+      </div>
+    </div>
+
+    <div class="tableWrap" style="margin-top:12px">
+      <table class="tbl" id="tbl">
+        <thead>
+          <tr>
+            <th style="width:72px">صورة</th>
+            <th>SKU</th>
+            <th>الاسم</th>
+            <th>القسم</th>
+            <th>سعر البيع</th>
+            <th>الإيجار/يوم</th>
+            <th>العربون</th>
+            <th>المقاسات</th>
+            <th style="width:90px">إجراء</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="small" id="countInfo" style="margin-top:10px"></div>
   </div>
 
   <div class="footer">© Fakhr Alanaqah – Demo</div>
@@ -254,20 +311,111 @@ document.getElementById('testApi').onclick = async ()=>{
   }
 };
 
-document.getElementById('reload').onclick = async ()=>{
-  const m3 = document.getElementById('m3');
-  const list = document.getElementById('list');
-  m3.textContent = "جارِ التحميل...";
-  try{
-    const items = await PRODUCTS();
-    m3.textContent = `✅ عدد المنتجات: ${items.length}`;
-    list.innerHTML = items.slice(0,30).map(p=>`${p.sku} - ${p.name} (بيع ${p.sale} / إيجار ${p.rent_day})`).join("<br/>") +
-      (items.length>30 ? "<br/>..." : "");
-  }catch(e){
-    m3.textContent = "❌ " + (e.message||e);
-    list.innerHTML = "";
+// ===== Products table (view) =====
+const __state = { all: [] };
+
+const collator = new Intl.Collator('ar', {numeric:true, sensitivity:'base'});
+const $ = (id)=>document.getElementById(id);
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+function isHttp(u){ return /^https?:\/\//i.test(String(u||'')); }
+
+function renderTable(items){
+  const tbody = document.querySelector('#tbl tbody');
+  if(!tbody) return;
+  tbody.innerHTML = items.map(p=>{
+    const sku = (p.sku||'').toString();
+    const name = (p.name||'').toString();
+    const cat = (p.cat||'').toString();
+    const sale = Number(p.sale||0);
+    const rent = Number(p.rent_day||0);
+    const dep = Number(p.deposit||0);
+    const sizes = Array.isArray(p.sizes) ? p.sizes.join(', ') : (p.sizes||'');
+    const thumb = (p.thumb||'').toString();
+    const thumbHtml = thumb
+      ? (isHttp(thumb) ? `<img class="thumb" src="${esc(thumb)}" alt="">` : `<span class="badge">${esc(thumb)}</span>`)
+      : `<span class="badge">—</span>`;
+
+    return `
+      <tr>
+        <td class="nowrap">${esc(sku)}</td>
+        <td>${thumbHtml}</td>
+        <td>${esc(name)}</td>
+        <td class="nowrap">${esc(cat||'—')}</td>
+        <td class="nowrap">${sale}</td>
+        <td class="nowrap">${rent}</td>
+        <td class="nowrap">${dep}</td>
+        <td>${esc(sizes||'')}</td>
+        <td class="nowrap"><button class="btn btnSm" data-copy="${esc(sku)}">نسخ</button></td>
+      </tr>`;
+  }).join('');
+}
+
+function applyFilters(){
+  const q = ($('q').value||'').trim().toLowerCase();
+  const cat = $('filterCat').value;
+  const sortBy = $('sortBy').value;
+
+  let items = (__state.all||[]).slice();
+  if(cat) items = items.filter(p=>String(p.cat||'')===cat);
+  if(q){
+    items = items.filter(p=>{
+      const sku = String(p.sku||'').toLowerCase();
+      const name = String(p.name||'').toLowerCase();
+      return sku.includes(q) || name.includes(q);
+    });
   }
-};
+
+  const bySku = (a,b)=>collator.compare(String(a.sku||''), String(b.sku||''));
+  const byName = (a,b)=>collator.compare(String(a.name||''), String(b.name||''));
+  if(sortBy==='sku_desc') items.sort((a,b)=>-bySku(a,b));
+  else if(sortBy==='name_asc') items.sort(byName);
+  else if(sortBy==='name_desc') items.sort((a,b)=>-byName(a,b));
+  else items.sort(bySku);
+
+  renderTable(items);
+  $('countInfo').textContent = `النتيجة: ${items.length} من ${(__state.all||[]).length}`;
+}
+
+async function reloadProducts(){
+  const m3 = $('m3');
+  m3.textContent = 'جارِ التحميل...';
+  try{
+    __state.all = await PRODUCTS();
+    m3.textContent = `✅ تم التحميل (${__state.all.length})`;
+  }catch(e){
+    __state.all = [];
+    m3.textContent = '❌ ' + (e.message||e);
+  }
+  applyFilters();
+}
+
+$('reload').onclick = reloadProducts;
+$('clearFilters').onclick = ()=>{ $('q').value=''; $('filterCat').value=''; $('sortBy').value='sku_asc'; applyFilters(); };
+$('q').addEventListener('input', ()=>applyFilters());
+$('filterCat').addEventListener('change', ()=>applyFilters());
+$('sortBy').addEventListener('change', ()=>applyFilters());
+
+document.addEventListener('click', async (ev)=>{
+  const btn = ev.target.closest('[data-copy]');
+  if(!btn) return;
+  const sku = btn.getAttribute('data-copy')||'';
+  try{
+    await navigator.clipboard.writeText(sku);
+    btn.textContent = '✅';
+    setTimeout(()=>btn.textContent='نسخ', 900);
+  }catch(_){
+    // fallback
+    prompt('انسخ SKU:', sku);
+  }
+});
+
+// auto load on open
+reloadProducts();
 </script>
 
 <script>
