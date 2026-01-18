@@ -45,11 +45,17 @@ async function loadProducts(){
 function getApiUrl(){
   return (window.FA_CONFIG && window.FA_CONFIG.apiUrl) ? String(window.FA_CONFIG.apiUrl).trim() : '';
 }
+function getDefaultPin(role){
+  const c = window.FA_CONFIG || {};
+  const p = (role === 'admin') ? c.adminPin : c.staffPin;
+  return p ? String(p).trim() : '';
+}
 function getSessionPin(role){
-  return sessionStorage.getItem('fa_pin_'+role) || '';
+  return sessionStorage.getItem('fa_pin_'+role) || getDefaultPin(role) || '';
 }
 function setSessionPin(role, pin){
-  if(pin) sessionStorage.setItem('fa_pin_'+role, String(pin).trim());
+  // نحفظه حتى لو كان فاضي (للتحكم)
+  sessionStorage.setItem('fa_pin_'+role, (pin===undefined||pin===null) ? '' : String(pin).trim());
 }
 
 async function apiGet(action, params={}){
@@ -73,7 +79,7 @@ async function apiPost(action, payload={}){
   if(!baseUrl || baseUrl.includes('PASTE_APPS_SCRIPT_WEBAPP_URL_HERE')) throw new Error('API_NOT_SET');
   const res = await fetch(baseUrl, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+
     body: JSON.stringify({action, ...payload})
   });
   const txt = await res.text();
