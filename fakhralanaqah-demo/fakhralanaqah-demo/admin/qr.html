@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>طباعة QR للمنتجات | فخر الأناقة</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+  <style>
+    .controls{margin-top:16px}
+    .controls .row{justify-content:space-between}
+    .labels{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 900px){
+      .labels{grid-template-columns: repeat(2, 1fr);}
+    }
+    @media (max-width: 560px){
+      .labels{grid-template-columns: 1fr;}
+    }
+    .label{
+      border:1px dashed rgba(214,179,94,.35);
+      border-radius:16px;
+      padding:10px;
+      background:rgba(255,255,255,.02);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-height:120px;
+    }
+    .qr{
+      width:92px;height:92px;
+      border-radius:14px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;place-items:center;
+      overflow:hidden;
+    }
+    .qr img{width:100%;height:100%;object-fit:cover}
+    .info{flex:1}
+    .info .sku{color:var(--gold);font-weight:900;letter-spacing:.6px}
+    .info .name{font-weight:800;margin-top:2px}
+    .info .meta{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.5}
+    .smallhint{color:var(--muted);font-size:12px;line-height:1.6;margin-top:8px}
+
+    @media print{
+      body{background:#fff;color:#000}
+      .nav,.controls,.footer{display:none !important}
+      .container{max-width:none;padding:0}
+      .labels{grid-template-columns: repeat(3, 1fr); gap:10px; padding:12px}
+      .label{
+        background:#fff;
+        border:1px solid #999;
+        border-radius:10px;
+        min-height:110px;
+        page-break-inside: avoid;
+      }
+      .info .sku{color:#000}
+      .info .meta{color:#000}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <div class="fa-logoWrap" style="position:relative;width:44px;height:44px">
+  <div class="logo fa-logoFallback">FA</div>
+  <img class="fa-logoImg" src="/assets/logo.png" alt="Fakhr Alanaqah logo"
+    style="display:none;width:44px;height:44px;border-radius:14px;object-fit:contain;background:linear-gradient(135deg,var(--gold),#3a2f10);border:1px solid rgba(214,179,94,.35);"/>
+</div>
+</div>
+      <div class="links">
+        <a class="pill" href="/admin/">لوحة يعقوب</a>
+        <a class="pill" href="/staff/">لوحة الموظف</a>
+        <a class="pill" href="/">الرئيسية</a>
+      </div>
+    </div>
+
+    <div class="form controls">
+      <div class="split">
+        <div>
+          <label>نوع البيانات داخل QR</label>
+          <select id="mode">
+            <option value="sku">SKU فقط (مستحسن)</option>
+            <option value="url">رابط المنتج (يفتح صفحة المنتج)</option>
+          </select>
+          <div class="smallhint">* في وضع SKU: الموظف يمسح QR ويظهر المنتج داخل لوحة الموظف مباشرة.</div>
+        </div>
+        <div>
+          <label>فلترة حسب القسم/النوع</label>
+          <select id="filter"></select>
+          <div class="smallhint">يمكنك طباعة نوع واحد فقط لتلصيقها على البضاعة بسرعة.</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="printBtn">طباعة</button>
+        <button class="btn" id="refreshBtn">تحديث القائمة</button>
+      </div>
+    </div>
+
+    <div id="labels" class="labels"></div>
+
+    <div class="footer">© Fakhr Alanaqah – Demo</div>
+  </div>
+
+<script src="/assets/config.js"></script>
+<script src="/assets/admin-access.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+(function(){
+  const img = document.getElementById('logoImg');
+  const box = document.getElementById('logoBox');
+  if(img){
+    img.onload = ()=>{ img.style.display='block'; if(box) box.style.display='none'; };
+  }
+})();
+
+function getPrefix(sku){
+  // B001, K003, A002, KH001
+  const m = sku.match(/^([A-Z]{1,2})/);
+  return m ? m[1] : '';
+}
+
+function qrUrl(data){
+  // QuickChart provides free QR PNG
+  // NOTE: For production you can switch to local generation later.
+  const txt = encodeURIComponent(data);
+  return `https://quickchart.io/qr?text=${txt}&size=200&margin=1`;
+}
+
+
+function getPrefixes(items){
+  const set = new Set(items.map(p => (p.sku.match(/^([A-Z]{1,2})/)||[])[1]).filter(Boolean));
+  return Array.from(set).sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
+}
+function populateFilter(items){
+  const sel = document.getElementById('filter');
+  const cur = sel.value || 'all';
+  const prefixes = getPrefixes(items);
+  sel.innerHTML = '<option value="all">الكل</option>' + prefixes.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(Array.from(sel.options).some(o=>o.value===cur)) sel.value = cur;
+}
+
+async function render(){
+  const mode = document.getElementById('mode').value;
+  const filter = document.getElementById('filter').value;
+  const items = await PRODUCTS();
+  populateFilter(items);
+
+  const filtered = items.filter(p=>{
+    if(filter==='all') return true;
+    return getPrefix(p.sku) === filter;
+  });
+
+  const baseUrl = location.origin;
+  const wrap = document.getElementById('labels');
+  wrap.innerHTML = filtered.map(p=>{
+    const payload = (mode==='url') ? `${baseUrl}/product.html?sku=${encodeURIComponent(p.sku)}` : p.sku;
+    return `
+      <div class="label">
+        <div class="qr"><img alt="QR" src="${qrUrl(payload)}"></div>
+        <div class="info">
+          <div class="sku">${p.sku}</div>
+          <div class="name">${p.name}</div>
+          <div class="meta">البيع: <b>${fmtOMR(p.sale)}</b> · الإيجار/يوم: <b>${fmtOMR(p.rent_day)}</b> · العربون: <b>${fmtOMR(p.deposit)}</b></div>
+          <div class="meta">قسم: ${p.cat}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+document.getElementById('refreshBtn').addEventListener('click', render);
+document.getElementById('mode').addEventListener('change', render);
+document.getElementById('filter').addEventListener('change', render);
+
+render();
+</script>
+
+<script>
+(function faInitLogo(){
+  const imgs = document.querySelectorAll('.fa-logoImg');
+  imgs.forEach(img=>{
+    const wrap = img.closest('.fa-logoWrap') || img.parentElement;
+    const fallback = wrap ? wrap.querySelector('.fa-logoFallback') : null;
+    img.onload = ()=>{ img.style.display='block'; if(fallback) fallback.style.display='none'; };
+    img.onerror = ()=>{ /* keep fallback */ };
+    // trigger for cached images
+    if(img.complete && img.naturalWidth>0){ img.onload(); }
+  });
+})();
+</script>
+
+</body>
+</html>
