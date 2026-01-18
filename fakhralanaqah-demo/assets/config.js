@@ -4,3 +4,4 @@ window.FA_CONFIG = {
   adminPinHint: "PIN يعقوب",
   staffPinHint: "PIN الموظف"
 };
+ 
